@@ -18,12 +18,15 @@ func (hs *HttpServer) handleBadRequest(conn net.Conn) {
 }
 
 func (hs *HttpServer) handleFileNotFoundRequest(requestHeader *HttpRequestHeader, conn net.Conn) {
-	panic("todo - handleFileNotFoundRequest")
+	// panic("todo - handleFileNotFoundRequest")
+	w := bufio.NewWriter(conn)
+	w.WriteString("HTTP/1.1 404 Not Found")
+	w.Flush()
 }
 
 func (hs *HttpServer) handleResponse(requestHeader *HttpRequestHeader, conn net.Conn) (result string) {
-	panic("todo - handleResponse")
-	server := "GoTriton-Server-1.0\r\n"
+	// panic("todo - handleResponse")
+	// server := "GoTriton-Server-1.0\r\n"
 	// lastModified := 
 	// contentType := 
 	return server
