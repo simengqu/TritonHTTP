@@ -2,12 +2,13 @@ package tritonhttp
 
 import (
 	"bufio"
-	"os"
 	"log"
+	"os"
 	"strings"
 )
-/** 
-	Load and parse the mime.types file 
+
+/**
+	Load and parse the mime.types file
 **/
 func ParseMIME(MIMEPath string) (MIMEMap map[string]string, err error) {
 	// panic("todo - ParseMIME")
@@ -29,7 +30,6 @@ func ParseMIME(MIMEPath string) (MIMEMap map[string]string, err error) {
 		contentType := paris[1]
 		MIMEMap[ext] = contentType
 	}
-	// log.Println(MIMEMap)
 	return MIMEMap, err
 }
 

@@ -36,18 +36,20 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	var res HttpResponseHeader
 	// timeoutDuration := 5 * time.Second
 	bufReader := bufio.NewReader(conn)
+	w := bufio.NewWriter(conn)
 	for {
-		w := bufio.NewWriter(conn)
 
 		// conn.SetReadDeadline(time.Now().Add(timeoutDuration))
-		buf := make([]byte, 32)
+		buf := make([]byte, 1024)
 		size, err := bufReader.Read(buf)
 		if err != nil {
-			log.Println("err")
+			log.Println(err)
 			break
 		}
+		// defer conn.Close()
 		data := buf[:size]
 		remaining = remaining + string(data)
+		// bufReader.Reset(bufReader)
 
 		for strings.Contains(remaining, delimiter) {
 			idx := strings.Index(remaining, delimiter)
@@ -55,7 +57,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 			// initial := remaining[idx+1:]
 			initialLine := strings.Fields(msg)
 			remaining = remaining[idx+1:]
-			log.Println(msg)
+			// log.Println(msg)
 			// log.Println(initialLine[0])
 			// w.WriteString(initialLine[0])
 			// w.Flush()
@@ -90,10 +92,33 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					hs.handleBadRequest(conn)
 					break
 				} else {
-					url := initialLine[1]
+					w.WriteString("HTTP/1.1 200 OK\r\n")
+					w.WriteString("Server: Go-Triton-Server-1.0\r\n")
+					w.Flush()
+
+					url := hs.DocRoot + initialLine[1]
+					if initialLine[1] == "/" {
+						log.Println("url is 11/")
+						url = hs.DocRoot + initialLine[1] + "index.html"
+					} else {
+						log.Println("url is " + url)
+						url = hs.DocRoot + initialLine[1]
+					}
 					log.Println(url)
-					lastIdx := strings.LastIndex(url, "/")
-					res.contentType = initialLine[1][lastIdx:]
+
+					lastIdx := strings.LastIndex(url, ".")
+					extension := url[lastIdx:]
+
+					if ext, ok := hs.MIMEMap[extension]; ok {
+						res.contentType = ext
+						log.Println("extension found: " + extension + " | " + ext)
+					} else {
+						res.contentType = "application/octet-stream"
+						log.Println("extension not found: " + extension)
+					}
+
+					// lastIdx := strings.LastIndex(url, "/")
+					// res.contentType = initialLine[1][lastIdx:]
 					fi, err := os.Stat(url)
 					if err != nil {
 						log.Fatal(err)
@@ -102,39 +127,34 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					size := fi.Size()
 					log.Println(res.contentType)
 					log.Println(size)
-					w.WriteString(res.contentType + "\n")
+
+					modifiedtime := fi.ModTime()
+					w.WriteString("Last-Modified: " + modifiedtime.String() + "\r\n")
 					w.Flush()
-					w.WriteString(strconv.FormatInt(size, 10) + "\n")
+					w.WriteString("Content-Length: " + strconv.FormatInt(size, 10) + "\r\n")
 					w.Flush()
-					w.WriteString("HTTP/1.1 200 OK\r\n")
+					w.WriteString("Contene-Type: " + res.contentType + "\r\n")
 					w.Flush()
+
 				}
-			} else if strings.HasPrefix(msg, "Host:") {
-				// fl = false
+			}
+			if strings.HasPrefix(msg, "Host:") {
 				idxH := strings.Index(msg, ":")
 				msgH := msg[idxH+1:]
-				log.Println(msgH)
-				w.WriteString("HOST\r\n")
-				w.Flush()
-				// req.host = strings.TrimSpace(msgH)
-				// req.validInitial = true
-
-			} else if strings.HasPrefix(msg, "Connection:") {
-				// fl = false
+				log.Println(msgH + "end of msgH")
+			}
+			if strings.HasPrefix(msg, "Connection:") {
 				idxH := strings.Index(msg, ":")
 				msgH := msg[idxH+1:]
 				connection := strings.TrimSpace(msgH)
-				if connection == "Close" {
+				if connection == "close" {
+					w.WriteString("Connection: closed\r\n")
+					w.Flush()
 					conn.Close()
 					log.Println("Connection closed by request.")
 					break
 				}
-				w.WriteString("CONNECTION\r\n")
-				w.Flush()
-				// req.validInitial = true
 			}
 		}
-		// w.WriteString("reading\r\n")
-		// w.Flush()
 	}
 }

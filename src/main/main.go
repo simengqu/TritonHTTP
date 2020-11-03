@@ -1,13 +1,14 @@
 package main
 
 import (
-	"tritonhttp"
 	"fmt"
-	"github.com/go-ini/ini"
 	"log"
 	"net/http"
 	"os"
 	"time"
+	"tritonhttp"
+
+	"github.com/go-ini/ini"
 )
 
 // Server startup configuration constants
@@ -66,22 +67,18 @@ func main() {
 		http.Handle("/", http.FileServer(http.Dir(docRoot)))
 
 		s := &http.Server{
-			Addr:		":"+serverPort,
-			Handler:	http.FileServer(http.Dir(docRoot)),
-			ReadTimeout:	5 * time.Second,
-			WriteTimeout:	5 * time.Second,
+			Addr:         ":" + serverPort,
+			Handler:      http.FileServer(http.Dir(docRoot)),
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 5 * time.Second,
 		}
 
 		// Once there's an error in listen and serve, it will be caught by log Fatal and terminate the process
 		log.Fatal(s.ListenAndServe())
 
 	} else {
-		log.Println("Starting TritonHTTP Server on port:", serverPort)
-		log.Println("Server has doc root as:", docRoot)
-		log.Println("Server has mime types file at:", mimeTypes)
-
 		// Initialize tritonhttp server
-		httpdServer, err := tritonhttp.NewHttpdServer(":" + serverPort, docRoot, mimeTypes)
+		httpdServer, err := tritonhttp.NewHttpdServer(":"+serverPort, docRoot, mimeTypes)
 		if err != nil {
 			log.Fatal(err)
 		}
