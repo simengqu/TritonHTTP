@@ -77,6 +77,8 @@ func main() {
 
 	} else {
 		log.Println("Starting TritonHTTP Server on port:", serverPort)
+		log.Println("Server has doc root as:", docRoot)
+		log.Println("Server has mime types file at:", mimeTypes)
 
 		// Initialize tritonhttp server
 		httpdServer, err := tritonhttp.NewHttpdServer(":" + serverPort, docRoot, mimeTypes)
