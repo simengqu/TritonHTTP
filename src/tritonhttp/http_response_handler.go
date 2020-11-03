@@ -4,8 +4,8 @@ import (
 	"net"
 	// "strings"
 	// "fmt"
-	"log"
 	"bufio"
+	"log"
 	"os"
 )
 
@@ -24,13 +24,13 @@ func (hs *HttpServer) handleFileNotFoundRequest(requestHeader *HttpRequestHeader
 	w.Flush()
 }
 
-func (hs *HttpServer) handleResponse(requestHeader *HttpRequestHeader, conn net.Conn) (result string) {
-	// panic("todo - handleResponse")
-	// server := "GoTriton-Server-1.0\r\n"
-	// lastModified := 
-	// contentType := 
-	return server
-}
+// func (hs *HttpServer) handleResponse(requestHeader *HttpRequestHeader, conn net.Conn) (result string) {
+// 	// panic("todo - handleResponse")
+// 	// server := "GoTriton-Server-1.0\r\n"
+// 	// lastModified :=
+// 	// contentType :=
+// 	return server
+// }
 
 func (hs *HttpServer) sendResponse(responseHeader HttpResponseHeader, conn net.Conn) {
 	panic("todo - sendResponse")

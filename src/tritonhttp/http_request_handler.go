@@ -2,15 +2,19 @@ package tritonhttp
 
 import (
 	"net"
+	"os"
+	"strconv"
+
 	// "fmt"
-	"strings"
 	"log"
+	"strings"
+
 	// "time"
 	"bufio"
 )
 
-/* 
-For a connection, keep handling requests until 
+/*
+For a connection, keep handling requests until
 	1. a timeout occurs or
 	2. client closes connection or
 	3. client sends a bad request
@@ -27,14 +31,14 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	// Update any ongoing requests
 	// If reusing read buffer, truncate it before next read
 
-	delimiter := "\n"
+	delimiter := "\r\n"
 	remaining := ""
-	fl := true
+	var res HttpResponseHeader
 	// timeoutDuration := 5 * time.Second
 	bufReader := bufio.NewReader(conn)
 	for {
 		w := bufio.NewWriter(conn)
-		
+
 		// conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 		buf := make([]byte, 32)
 		size, err := bufReader.Read(buf)
@@ -42,7 +46,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 			log.Println("err")
 			break
 		}
-		data := buf[:size]	
+		data := buf[:size]
 		remaining = remaining + string(data)
 
 		for strings.Contains(remaining, delimiter) {
@@ -55,28 +59,58 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 			// log.Println(initialLine[0])
 			// w.WriteString(initialLine[0])
 			// w.Flush()
-			if strings.HasPrefix(msg, "GET"){
-				if len(initialLine) != 3 || initialLine[len(initialLine)-1] != "HTTP/1.1" || initialLine[0] != "GET" && fl{
+			if strings.HasPrefix(msg, "GET") {
+				log.Println(initialLine)
+				checkHTTP := strings.TrimSpace(initialLine[len(initialLine)-1]) == "HTTP/1.1"
+				checkLength := len(initialLine) == 3
+				checkGet := initialLine[0] == "GET"
+				if !checkLength {
 					// req.validInitial = false
 					// w.WriteString("400 Bad Request1")
 					// w.Flush()
 					log.Println("error1")
-					log.Println(initialLine)
+					log.Println(len(initialLine))
 					hs.handleBadRequest(conn)
 					break
-				}else if !strings.HasPrefix(initialLine[1], "/") {
+				} else if !checkHTTP {
+					log.Println("error2")
+					log.Println(!checkHTTP)
+					log.Println(initialLine[len(initialLine)-1])
+					hs.handleBadRequest(conn)
+					break
+				} else if !checkGet {
+					log.Println("error3")
+					log.Println(initialLine[0])
+					hs.handleBadRequest(conn)
+					break
+				} else if !strings.HasPrefix(initialLine[1], "/") {
 					// w.WriteString("400 Bad Request2")
 					// w.Flush()
-					log.Println("error2")
+					log.Println("error4")
 					hs.handleBadRequest(conn)
 					break
-				}else {
-					log.Println("HTTP/1.1 200 OK\r\n")
+				} else {
+					url := initialLine[1]
+					log.Println(url)
+					lastIdx := strings.LastIndex(url, "/")
+					res.contentType = initialLine[1][lastIdx:]
+					fi, err := os.Stat(url)
+					if err != nil {
+						log.Fatal(err)
+					}
+					// get the size
+					size := fi.Size()
+					log.Println(res.contentType)
+					log.Println(size)
+					w.WriteString(res.contentType + "\n")
+					w.Flush()
+					w.WriteString(strconv.FormatInt(size, 10) + "\n")
+					w.Flush()
 					w.WriteString("HTTP/1.1 200 OK\r\n")
 					w.Flush()
 				}
 			} else if strings.HasPrefix(msg, "Host:") {
-				fl = false
+				// fl = false
 				idxH := strings.Index(msg, ":")
 				msgH := msg[idxH+1:]
 				log.Println(msgH)
@@ -86,7 +120,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				// req.validInitial = true
 
 			} else if strings.HasPrefix(msg, "Connection:") {
-				fl = false
+				// fl = false
 				idxH := strings.Index(msg, ":")
 				msgH := msg[idxH+1:]
 				connection := strings.TrimSpace(msgH)
