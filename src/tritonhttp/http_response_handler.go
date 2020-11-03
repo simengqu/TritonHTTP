@@ -12,15 +12,17 @@ import (
 func (hs *HttpServer) handleBadRequest(conn net.Conn) {
 	// panic("todo - handleBadRequest")
 	w := bufio.NewWriter(conn)
-	w.WriteString("HTTP/1.1 400 Bad Request")
+	w.WriteString("HTTP/1.1 400 Bad Request\r\n")
+	w.WriteString("Connection: closed\r\n")
 	w.Flush()
+	conn.Close()
 
 }
 
 func (hs *HttpServer) handleFileNotFoundRequest(requestHeader *HttpRequestHeader, conn net.Conn) {
 	// panic("todo - handleFileNotFoundRequest")
 	w := bufio.NewWriter(conn)
-	w.WriteString("HTTP/1.1 404 Not Found")
+	w.WriteString("HTTP/1.1 404 Not Found\r\n")
 	w.Flush()
 }
 
@@ -41,6 +43,7 @@ func (hs *HttpServer) sendResponse(responseHeader HttpResponseHeader, conn net.C
 
 	// Hint - Use the bufio package to write response
 	w := bufio.NewWriter(os.Stdout)
+
 	log.Println(w, headers)
 	w.Flush()
 }

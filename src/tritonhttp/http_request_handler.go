@@ -4,6 +4,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"time"
 
 	// "fmt"
 	"log"
@@ -31,36 +32,46 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	// Update any ongoing requests
 	// If reusing read buffer, truncate it before next read
 
-	delimiter := "\r\n"
+	delimiter := "\n"
 	remaining := ""
 	var res HttpResponseHeader
-	// timeoutDuration := 5 * time.Second
-	bufReader := bufio.NewReader(conn)
+	timeoutDuration := 5 * time.Second
+	// bufReader := bufio.NewReader(conn)
 	w := bufio.NewWriter(conn)
+	response := ""
 	for {
 
-		// conn.SetReadDeadline(time.Now().Add(timeoutDuration))
-		buf := make([]byte, 1024)
-		size, err := bufReader.Read(buf)
+		conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+		// defer conn.Close()
+		buf := make([]byte, 10)
+		// size, err := bufReader.Read(buf)
+		size, err := conn.Read(buf)
 		if err != nil {
 			log.Println(err)
 			break
 		}
-		// defer conn.Close()
 		data := buf[:size]
 		remaining = remaining + string(data)
 		// bufReader.Reset(bufReader)
-
+		log.Println("original msg: " + remaining)
 		for strings.Contains(remaining, delimiter) {
+			// conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+			// log.Println("delimiter: " + delimiter)
+			// log.Println("original msg: " + remaining)
 			idx := strings.Index(remaining, delimiter)
 			msg := remaining[:idx]
+			// log.Println("request: " + msg)
 			// initial := remaining[idx+1:]
 			initialLine := strings.Fields(msg)
 			remaining = remaining[idx+1:]
-			// log.Println(msg)
+			// log.Println("left msg: " + remaining)
 			// log.Println(initialLine[0])
 			// w.WriteString(initialLine[0])
 			// w.Flush()
+			// log.Println("prefix host: ")
+			// log.Println(strings.HasPrefix(msg, "Host"))
+			// log.Println("prefix conn: ")
+			// log.Println(strings.HasPrefix(msg, "Connection:"))
 			if strings.HasPrefix(msg, "GET") {
 				log.Println(initialLine)
 				checkHTTP := strings.TrimSpace(initialLine[len(initialLine)-1]) == "HTTP/1.1"
@@ -92,9 +103,11 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					hs.handleBadRequest(conn)
 					break
 				} else {
-					w.WriteString("HTTP/1.1 200 OK\r\n")
-					w.WriteString("Server: Go-Triton-Server-1.0\r\n")
-					w.Flush()
+					response += "HTTP/1.1 200 OK\r\n"
+					response += "Server: Go-Triton-Server-1.0\r\n"
+					// w.WriteString("HTTP/1.1 200 OK\r\n")
+					// w.WriteString("Server: Go-Triton-Server-1.0\r\n")
+					// w.Flush()
 
 					url := hs.DocRoot + initialLine[1]
 					if initialLine[1] == "/" {
@@ -124,37 +137,47 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						log.Fatal(err)
 					}
 					// get the size
-					size := fi.Size()
+					res.contentLength = fi.Size()
 					log.Println(res.contentType)
 					log.Println(size)
 
-					modifiedtime := fi.ModTime()
-					w.WriteString("Last-Modified: " + modifiedtime.String() + "\r\n")
-					w.Flush()
-					w.WriteString("Content-Length: " + strconv.FormatInt(size, 10) + "\r\n")
-					w.Flush()
-					w.WriteString("Contene-Type: " + res.contentType + "\r\n")
-					w.Flush()
+					res.lastModified = fi.ModTime().String()
+					response += "Last-Modified: " + res.lastModified + "\r\n"
+					response += "Content-Length: " + strconv.FormatInt(res.contentLength, 10) + "\r\n"
+					response += "Contene-Type: " + res.contentType + "\r\n\r\n"
+					// w.WriteString(response)
+					// w.Flush()
+					// w.WriteString("Last-Modified: " + rs.lastModified.String() + "\r\n")
+					// w.Flush()
+					// w.WriteString("Content-Length: " + strconv.FormatInt(size, 10) + "\r\n")
+					// w.Flush()
+					// w.WriteString("Contene-Type: " + res.contentType + "\r\n")
+					// w.Flush()
 
 				}
-			}
-			if strings.HasPrefix(msg, "Host:") {
+			} else if strings.HasPrefix(msg, "Host:") {
 				idxH := strings.Index(msg, ":")
 				msgH := msg[idxH+1:]
-				log.Println(msgH + "end of msgH")
-			}
-			if strings.HasPrefix(msg, "Connection:") {
+				log.Println(msgH + " end of msgH")
+				w.WriteString(response)
+				w.Flush()
+				// hs.sendResponse()
+			} else if strings.HasPrefix(msg, "Connection:") {
 				idxH := strings.Index(msg, ":")
 				msgH := msg[idxH+1:]
 				connection := strings.TrimSpace(msgH)
 				if connection == "close" {
+					res.connection = "close"
 					w.WriteString("Connection: closed\r\n")
 					w.Flush()
 					conn.Close()
 					log.Println("Connection closed by request.")
-					break
+					return
+				} else {
+					res.connection = "no"
 				}
 			}
+			break
 		}
 	}
 }
