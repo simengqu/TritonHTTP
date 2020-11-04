@@ -153,7 +153,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 
 						// lastIdx := strings.LastIndex(url, "/")
 						// res.contentType = initialLine[1][lastIdx:]
-						fi, err := os.Stat(url)
+						fi, err := os.Open(url)
+						defer fi.Close()
 						if err != nil {
 							// w.WriteString("HTTP/1.1 404 Not Found")
 							// w.Flush()
@@ -162,11 +163,14 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							break
 						}
 						// get the size
-						res.contentLength = fi.Size()
+						fiStat, _ := fi.Stat()
+						res.contentLength = fiStat.Size()
+						// io.Copy(w, fi)
+						// w.Flush()
 						// log.Println(res.contentType)
 						// log.Println(size)
 
-						res.lastModified = fi.ModTime().String()
+						res.lastModified = fiStat.ModTime().String()
 						response += "Last-Modified: " + res.lastModified + "\r\n"
 						response += "Content-Length: " + strconv.FormatInt(res.contentLength, 10) + "\r\n"
 						response += "Content-Type: " + res.contentType + "\r\n\r\n"
