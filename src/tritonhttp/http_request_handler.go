@@ -199,8 +199,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					// msgH := msg[idxH+1:]
 
 					// log.Println(msgH + " end of msgH")
-					w.WriteString(response)
-					w.Flush()
+					// w.WriteString(response)
+					// w.Flush()
 					// hs.sendResponse()
 				} else {
 					// w.WriteString("400 Bad Request")
@@ -211,9 +211,38 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					break
 				}
 
-				if len(reqSlice) > 2 {
-					log.Println("handel connection")
-					if strings.HasPrefix(reqSlice[2], "Connection:") {
+				// if len(reqSlice) > 2 {
+				// 	log.Println("handel connection")
+				// 	if strings.HasPrefix(reqSlice[2], "Connection:") {
+				// 		log.Println("handel connection2")
+				// 		idxH := strings.Index(reqSlice[2], ":")
+				// 		msgH := reqSlice[2][idxH+1:]
+				// 		connection := strings.TrimSpace(msgH)
+				// 		log.Println("conn msg:" + connection)
+				// 		if connection == "close" {
+				// 			res.connection = "close"
+				// 			w.WriteString("Connection: closed\r\n")
+				// 			w.Flush()
+				// 			conn.Close()
+				// 			log.Println("Connection closed by request.")
+				// 			return
+				// 		} else {
+				// 			log.Println("not close")
+				// 			res.connection = "no"
+				// 		}
+				// 	}
+				// }
+
+				for i := 2; i < len(reqSlice); i++ {
+					idxKv := strings.Index(reqSlice[i], ":")
+					if idxKv == -1 {
+						log.Println("not valid header")
+						hs.handleBadRequest(conn)
+						break
+					}
+					// kv := strings.Split(reqSlice[i], ":")
+					log.Println("processing header")
+					if strings.HasPrefix(reqSlice[i], "Connection:") {
 						log.Println("handel connection2")
 						idxH := strings.Index(reqSlice[2], ":")
 						msgH := reqSlice[2][idxH+1:]
@@ -221,8 +250,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						log.Println("conn msg:" + connection)
 						if connection == "close" {
 							res.connection = "close"
-							w.WriteString("Connection: closed\r\n")
-							w.Flush()
+							// w.WriteString("Connection: closed\r\n")
+							// w.Flush()
 							conn.Close()
 							log.Println("Connection closed by request.")
 							return
@@ -232,7 +261,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						}
 					}
 				}
-
+				w.WriteString(response)
+				w.Flush()
 			}
 
 		}
