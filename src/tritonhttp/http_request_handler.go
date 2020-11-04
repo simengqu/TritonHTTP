@@ -43,12 +43,12 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	for {
 
 		conn.SetReadDeadline(time.Now().Add(timeoutDuration))
-		// defer conn.Close()
+		defer conn.Close()
 
 		// size, err := bufReader.Read(buf)
 		size, err := conn.Read(buf)
 		if err != nil {
-			log.Println(err)
+			// log.Println(err)
 			// break
 		}
 		data := buf[:size]
@@ -224,6 +224,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 			}
 
 		}
-		log.Println("finish requests")
+		// log.Println("finish requests")
 	}
 }

@@ -5,7 +5,8 @@ import (
 	"log"
 	"net"
 )
-/** 
+
+/**
 	Initialize the tritonhttp server by populating HttpServer structure
 **/
 func NewHttpdServer(port, docRoot, mimePath string) (*HttpServer, error) {
@@ -23,7 +24,7 @@ func NewHttpdServer(port, docRoot, mimePath string) (*HttpServer, error) {
 	return &hs, err
 }
 
-/** 
+/**
 	Start the tritonhttp server
 **/
 func (hs *HttpServer) Start() (err error) {
@@ -34,7 +35,7 @@ func (hs *HttpServer) Start() (err error) {
 	// Accept connection from client
 
 	// Spawn a go routine to handle request
-	
+
 	log.Println("Handling new connection...")
 
 	ln, err := net.Listen("tcp", hs.ServerPort)
@@ -57,4 +58,3 @@ func (hs *HttpServer) Start() (err error) {
 	}
 	return err
 }
-
