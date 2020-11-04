@@ -35,15 +35,15 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	delimiter := "\r\n"
 	remaining := ""
 	var res HttpResponseHeader
-	timeoutDuration := 5 * time.Second
+	timeoutDuration := time.Now().Add(5 * time.Second)
 	// bufReader := bufio.NewReader(conn)
 	w := bufio.NewWriter(conn)
 	response := ""
 	log.Println("\n\nIn Go routine\n")
-	for {
+	for time.Now().Before(timeoutDuration){
 		buf := make([]byte, 1024)
 		defer conn.Close()
-		conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+		// conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 
 		// size, err := bufReader.Read(buf)
 		size, err := conn.Read(buf)
@@ -227,8 +227,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				}
 
 			}
-		} else {
-			conn.SetDeadline(time.Now().Add(timeoutDuration))
-		}
+			
+		} 
 	}
 }
