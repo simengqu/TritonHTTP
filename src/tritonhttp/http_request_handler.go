@@ -68,9 +68,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				fmt.Println("processing: ")
 				fmt.Println(reqSlice)
 				if len(reqSlice) < 2 {
-					// w.WriteString("400 Bad Request")
-					// w.Flush()
-					// conn.Close()
 					hs.handleBadRequest(conn)
 					break
 				}
@@ -117,14 +114,11 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							fmt.Println("url is 11/:")
 							url = hs.DocRoot + firstR[1] + "index.html"
 						} else if idxFirstR == len(firstR[1])-1 {
-							// if strings.HasPrefix(firstR[1], "/index")
 							fmt.Println("url is 22/:")
 							url = hs.DocRoot + firstR[1] + "index.html"
 						} else {
-							// fmt.Println("url is " + url)
 							url = hs.DocRoot + firstR[1]
 						}
-						// fmt.Println(url)
 						fi, err := os.Open(url)
 						defer fi.Close()
 						if err != nil {
@@ -144,56 +138,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							res.contentType = "application/octet-stream"
 							fmt.Println("extension not found: " + extension)
 						}
-
-						// lastIdx := strings.LastIndex(url, "/")
-						// res.contentType = initialLine[1][lastIdx:]
-						// fi, err := os.Open(url)
-						// defer fi.Close()
-						// if err != nil {
-						// 	code = 404
-						// 	hs.handleFileNotFoundRequest(conn)
-						// 	fmt.Println(err)
-						// 	break
-						// }
-						// get the size
-						// fiStat, _ := fi.Stat()
-						// res.contentLength = fiStat.Size()
-						// io.Copy(w, fi)
-						// w.Flush()
-						// fmt.Println(res.contentType)
-						// fmt.Println(size)
-
-						// check host
-						// secondLine := reqSlice[1]
-						// fmt.Println("second l: " + secondLine)
-						// if strings.HasPrefix(secondLine, "Host") {
-						// 	// idxH := strings.Index(msg, ":")
-						// 	// msgH := msg[idxH+1:]
-
-						// 	fmt.Println("Has Host")
-						// 	// w.WriteString(response)
-						// 	// w.Flush()
-						// 	// hs.sendResponse()
-						// 	code = 200
-
-						// 	fi, err := os.Open(url)
-						// 	defer fi.Close()
-						// 	if err != nil {
-						// 		code = 404
-						// 		hs.handleFileNotFoundRequest(conn)
-						// 		fmt.Println(err)
-						// 		break
-						// 	}
-						// 	w.WriteString(response)
-						// 	w.Flush()
-						// 	io.Copy(w, fi)
-						// 	w.Flush()
-						// } else {
-						// 	fmt.Println("error6")
-						// 	// hs.handleBadRequest(conn)
-						// 	code = 400
-						// 	break
-						// }
 					}
 				}
 
@@ -210,13 +154,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				secondLine := reqSlice[1]
 				fmt.Println("second l: " + secondLine)
 				if strings.HasPrefix(secondLine, "Host:") {
-					// idxH := strings.Index(msg, ":")
-					// msgH := msg[idxH+1:]
-
 					fmt.Println("Has Host")
-					// w.WriteString(response)
-					// w.Flush()
-					// hs.sendResponse()
 					code = 200
 
 					fi, err := os.Open(url)
@@ -262,8 +200,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						fmt.Println("conn msg:" + connection)
 						if connection == "close" {
 							res.connection = "close"
-							// w.WriteString("Connection: closed\r\n")
-							// w.Flush()
 							conn.Close()
 							fmt.Println("Connection closed by request.")
 							return
@@ -273,98 +209,10 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						}
 					}
 				}
-
-				// else {
-				// 	code = 400
-				// 	fmt.Println("error5")
-				// 	fmt.Println(initialLine)
-				// 	hs.handleBadRequest(conn)
-				// 	break
-				// }
-
-				// if len(reqSlice) > 2 {
-				// 	fmt.Println("handel connection")
-				// 	if strings.HasPrefix(reqSlice[2], "Connection:") {
-				// 		fmt.Println("handel connection2")
-				// 		idxH := strings.Index(reqSlice[2], ":")
-				// 		msgH := reqSlice[2][idxH+1:]
-				// 		connection := strings.TrimSpace(msgH)
-				// 		fmt.Println("conn msg:" + connection)
-				// 		if connection == "close" {
-				// 			res.connection = "close"
-				// 			// w.WriteString("Connection: closed\r\n")
-				// 			// w.Flush()
-				// 			conn.Close()
-				// 			fmt.Println("Connection closed by request.")
-				// 			return
-				// 		} else {
-				// 			fmt.Println("not close")
-				// 			res.connection = "no"
-				// 		}
-				// 	}
-				// }
-
-				// goodFormat := true
-				// for i := 2; i < len(reqSlice); i++ {
-				// 	idxKv := strings.Index(reqSlice[i], ":")
-				// 	if idxKv == -1 {
-				// 		fmt.Println("not valid header")
-				// 		hs.handleBadRequest(conn)
-				// 		goodFormat = false
-				// 		break
-				// 	}
-				// 	// kv := strings.Split(reqSlice[i], ":")
-				// 	fmt.Println("processing header")
-				// 	if strings.HasPrefix(reqSlice[i], "Connection:") {
-				// 		fmt.Println("handel connection2")
-				// 		idxH := strings.Index(reqSlice[2], ":")
-				// 		msgH := reqSlice[2][idxH+1:]
-				// 		connection := strings.TrimSpace(msgH)
-				// 		fmt.Println("conn msg:" + connection)
-				// 		if connection == "close" {
-				// 			res.connection = "close"
-				// 			// w.WriteString("Connection: closed\r\n")
-				// 			// w.Flush()
-				// 			conn.Close()
-				// 			fmt.Println("Connection closed by request.")
-				// 			return
-				// 		} else {
-				// 			fmt.Println("not close")
-				// 			res.connection = "no"
-				// 		}
-				// 	}
-				// }
-				// if goodFormat {
-				// 	w.WriteString(response)
-				// 	w.Flush()
-				// }
 				fmt.Println("-=-=-=-=-=-=-=WRITING RESPONSE -=-=-=-=-=-=-=")
 				fmt.Println(code)
-				// if code == 200 {
-				// 	w.WriteString(response)
-				// 	w.Flush()
-				// 	fi, err := os.Open(url)
-				// 	defer fi.Close()
-				// 	if err != nil {
-				// 		code = 404
-				// 		hs.handleFileNotFoundRequest(conn)
-				// 		fmt.Println(err)
-				// 		break
-				// 	}
-				// 	io.Copy(w, fi)
-				// 	w.Flush()
-				// 	// fmt.Println(res.contentType)
-				// 	// fmt.Println(size)
-				// } else if code == 400 {
-				// 	hs.handleBadRequest(conn)
-				// } else if code == 404 {
-				// 	hs.handleFileNotFoundRequest(conn)
-				// } else {
-				// 	fmt.Println("-=-=-=-=--=-=-==-=-=-=-==-error when handling requests-=-=-=-=--=-=-==-=-=-=-==-")
-				// }
 			}
 
 		}
 	}
-	// hs.handleBadRequest(conn)
 }
