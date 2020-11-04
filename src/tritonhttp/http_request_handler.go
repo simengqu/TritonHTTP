@@ -1,17 +1,14 @@
 package tritonhttp
 
 import (
+	"bufio"
+	"fmt"
+	"io"
 	"net"
 	"os"
 	"strconv"
-	"time"
-
-	// "fmt"
-	"log"
 	"strings"
-
-	// "time"
-	"bufio"
+	"time"
 )
 
 /*
@@ -39,7 +36,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	bufReader := bufio.NewReader(conn)
 	w := bufio.NewWriter(conn)
 	response := ""
-	log.Println("\n\nIn Go routine")
+	code := 0
+	fmt.Println("\n\nIn Go routine")
 	for time.Now().Before(timeoutDuration) {
 		buf := make([]byte, 1024)
 		defer conn.Close()
@@ -48,26 +46,27 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 		size, err := bufReader.Read(buf)
 		// size, err := conn.Read(buf)
 		if err != nil {
-			// log.Println(err)
+			// fmt.Println(err)
 		}
-		// log.Println(size)
 
 		data := buf[:size]
 		remaining = remaining + string(data)
-		// bufReader.Reset(bufReader)
-		// log.Println("original msg: " + remaining)
-		// conn.SetDeadline(time.Now().Add(timeoutDuration))
+		url := ""
 		if size != 0 {
 
 			for strings.Contains(remaining, "\r\n\r\n") {
-				// log.Println("delimiter: " + delimiter)
-				// log.Println("original msg: " + remaining)
-				log.Println("original:" + remaining)
+				fmt.Println("IN CONTAINS:::::::::::::::::::")
+				fmt.Println("original: " + remaining)
 				idx := strings.Index(remaining, "\r\n\r\n")
 				msg := remaining[:idx] // whole requests
-				remaining = remaining[idx+1:]
+				remaining = remaining[idx+4:]
+				if strings.HasPrefix(remaining, "GET") {
+					fmt.Println("Has GET-----")
+				}
+				fmt.Println("remaining: " + remaining)
 				reqSlice := strings.Split(msg, delimiter) // request
-				log.Println(len(reqSlice))
+				fmt.Println("processing: ")
+				fmt.Println(reqSlice)
 				if len(reqSlice) < 2 {
 					// w.WriteString("400 Bad Request")
 					// w.Flush()
@@ -75,80 +74,66 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					hs.handleBadRequest(conn)
 					break
 				}
-				log.Println("message:" + msg)
-				log.Println("left:" + remaining)
+				fmt.Println("message:" + msg)
+				fmt.Println("left:" + remaining)
 				initialLine := reqSlice[0] // get
 
 				// initialLine = GET /index.html HTTP/1.1
 				if strings.HasPrefix(initialLine, "GET") {
 					firstR := strings.Split(initialLine, " ")
-					log.Println(firstR)
-					// checkHTTP := firstR[0] == "HTTP/1.1"
-					// checkLength := len(initialLine) == 3
-					// checkGet := firstR[0] == "GET"
+					fmt.Println(firstR)
 					if len(firstR) != 3 {
-						log.Println("error1")
-						log.Println(firstR)
-						log.Println(len(firstR))
-						// w.WriteString("400 Bad Request")
-						// w.Flush()
-						// conn.Close()
-						hs.handleBadRequest(conn)
+						fmt.Println("error1")
+						fmt.Println(firstR)
+						fmt.Println(len(firstR))
+						code = 400
+						// hs.handleBadRequest(conn)
 						break
 					} else if firstR[2] != "HTTP/1.1" {
-						log.Println("error2")
-						log.Println(firstR[2])
-						// w.WriteString("400 Bad Request")
-						// w.Flush()
-						// conn.Close()
-						hs.handleBadRequest(conn)
+						fmt.Println("error2")
+						fmt.Println(firstR[2])
+						code = 400
+						// hs.handleBadRequest(conn)
 						break
 					} else if firstR[0] != "GET" {
-						log.Println("error3")
-						log.Println(initialLine[0])
-						// w.WriteString("400 Bad Request")
-						// w.Flush()
-						// conn.Close()
-						hs.handleBadRequest(conn)
+						fmt.Println("error3")
+						fmt.Println(initialLine[0])
+						code = 400
+						// hs.handleBadRequest(conn)
 						break
 					} else if !strings.HasPrefix(firstR[1], "/") {
-						log.Println("error4")
-						// w.WriteString("400 Bad Request")
-						// w.Flush()
-						// conn.Close()
-						hs.handleBadRequest(conn)
+						fmt.Println("error4")
+						code = 400
+						// hs.handleBadRequest(conn)
 						break
 					} else {
 						response += "HTTP/1.1 200 OK\r\n"
 						response += "Server: Go-Triton-Server-1.0\r\n"
-						// w.WriteString("HTTP/1.1 200 OK\r\n")
-						// w.WriteString("Server: Go-Triton-Server-1.0\r\n")
-						// w.Flush()
 
-						url := hs.DocRoot + firstR[1]
+						url = hs.DocRoot + firstR[1]
 						idxFirstR := strings.LastIndex(firstR[1], "/")
 						if firstR[1] == "/" {
-							log.Println("url is 11/:")
+							fmt.Println("url is 11/:")
 							url = hs.DocRoot + firstR[1] + "index.html"
 						} else if idxFirstR == len(firstR[1])-1 {
 							// if strings.HasPrefix(firstR[1], "/index")
-							log.Println("url is 22/:")
+							fmt.Println("url is 22/:")
 							url = hs.DocRoot + firstR[1] + "index.html"
 						} else {
-							log.Println("url is " + url)
+							// fmt.Println("url is " + url)
 							url = hs.DocRoot + firstR[1]
 						}
-						log.Println(url)
+						// fmt.Println(url)
 
 						lastIdx := strings.LastIndex(url, ".")
 						extension := url[lastIdx:]
 
 						if ext, ok := hs.MIMEMap[extension]; ok {
 							res.contentType = ext
-							log.Println("extension found: " + extension + " | " + ext)
+							fmt.Println("extension found: " + extension + " | " + ext)
 						} else {
 							res.contentType = "application/octet-stream"
-							log.Println("extension not found: " + extension)
+							fmt.Println("extension not found: " + extension)
 						}
 
 						// lastIdx := strings.LastIndex(url, "/")
@@ -156,10 +141,9 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						fi, err := os.Open(url)
 						defer fi.Close()
 						if err != nil {
-							// w.WriteString("HTTP/1.1 404 Not Found")
-							// w.Flush()
-							hs.handleFileNotFoundRequest(conn)
-							log.Println(err)
+							code = 404
+							// hs.handleFileNotFoundRequest(conn)
+							fmt.Println(err)
 							break
 						}
 						// get the size
@@ -167,67 +151,58 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						res.contentLength = fiStat.Size()
 						// io.Copy(w, fi)
 						// w.Flush()
-						// log.Println(res.contentType)
-						// log.Println(size)
+						// fmt.Println(res.contentType)
+						// fmt.Println(size)
 
 						res.lastModified = fiStat.ModTime().String()
 						response += "Last-Modified: " + res.lastModified + "\r\n"
 						response += "Content-Length: " + strconv.FormatInt(res.contentLength, 10) + "\r\n"
 						response += "Content-Type: " + res.contentType + "\r\n\r\n"
-						// w.WriteString(response)
-						// w.Flush()
-						// w.WriteString("Last-Modified: " + rs.lastModified.String() + "\r\n")
-						// w.Flush()
-						// w.WriteString("Content-Length: " + strconv.FormatInt(size, 10) + "\r\n")
-						// w.Flush()
-						// w.WriteString("Contene-Type: " + res.contentType + "\r\n")
-						// w.Flush()
 
+						// check host
+						secondLine := reqSlice[1]
+						fmt.Println("second l: " + secondLine)
+						if strings.HasPrefix(secondLine, "Host") {
+							// idxH := strings.Index(msg, ":")
+							// msgH := msg[idxH+1:]
+
+							fmt.Println("-=-=-=-=-=-=-=WRITING RESPONSE -=-=-=-=-=-=-=")
+							// w.WriteString(response)
+							// w.Flush()
+							// hs.sendResponse()
+							code = 200
+						} else {
+							fmt.Println("error6")
+							// hs.handleBadRequest(conn)
+							code = 400
+							break
+						}
 					}
 				} else {
-					// w.WriteString("400 Bad Request\r\nServer: Go-Triton-Server-1.0\r\n\r\n")
-					// w.Flush()
-					// conn.Close()
-					log.Println("error5")
-					hs.handleBadRequest(conn)
-					break
-				}
-				secondLine := reqSlice[1]
-				log.Println("second l: " + secondLine)
-				if strings.HasPrefix(secondLine, "Host") {
-					// idxH := strings.Index(msg, ":")
-					// msgH := msg[idxH+1:]
-
-					// log.Println(msgH + " end of msgH")
-					w.WriteString(response)
-					w.Flush()
-					// hs.sendResponse()
-				} else {
-					// w.WriteString("400 Bad Request")
-					// w.Flush()
-					// conn.Close()
-					log.Println("error6")
-					hs.handleBadRequest(conn)
+					code = 400
+					fmt.Println("error5")
+					fmt.Println(initialLine)
+					// hs.handleBadRequest(conn)
 					break
 				}
 
 				if len(reqSlice) > 2 {
-					log.Println("handel connection")
+					fmt.Println("handel connection")
 					if strings.HasPrefix(reqSlice[2], "Connection:") {
-						log.Println("handel connection2")
+						fmt.Println("handel connection2")
 						idxH := strings.Index(reqSlice[2], ":")
 						msgH := reqSlice[2][idxH+1:]
 						connection := strings.TrimSpace(msgH)
-						log.Println("conn msg:" + connection)
+						fmt.Println("conn msg:" + connection)
 						if connection == "close" {
 							res.connection = "close"
 							// w.WriteString("Connection: closed\r\n")
 							// w.Flush()
 							conn.Close()
-							log.Println("Connection closed by request.")
+							fmt.Println("Connection closed by request.")
 							return
 						} else {
-							log.Println("not close")
+							fmt.Println("not close")
 							res.connection = "no"
 						}
 					}
@@ -237,28 +212,28 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				// for i := 2; i < len(reqSlice); i++ {
 				// 	idxKv := strings.Index(reqSlice[i], ":")
 				// 	if idxKv == -1 {
-				// 		log.Println("not valid header")
+				// 		fmt.Println("not valid header")
 				// 		hs.handleBadRequest(conn)
 				// 		goodFormat = false
 				// 		break
 				// 	}
 				// 	// kv := strings.Split(reqSlice[i], ":")
-				// 	log.Println("processing header")
+				// 	fmt.Println("processing header")
 				// 	if strings.HasPrefix(reqSlice[i], "Connection:") {
-				// 		log.Println("handel connection2")
+				// 		fmt.Println("handel connection2")
 				// 		idxH := strings.Index(reqSlice[2], ":")
 				// 		msgH := reqSlice[2][idxH+1:]
 				// 		connection := strings.TrimSpace(msgH)
-				// 		log.Println("conn msg:" + connection)
+				// 		fmt.Println("conn msg:" + connection)
 				// 		if connection == "close" {
 				// 			res.connection = "close"
 				// 			// w.WriteString("Connection: closed\r\n")
 				// 			// w.Flush()
 				// 			conn.Close()
-				// 			log.Println("Connection closed by request.")
+				// 			fmt.Println("Connection closed by request.")
 				// 			return
 				// 		} else {
-				// 			log.Println("not close")
+				// 			fmt.Println("not close")
 				// 			res.connection = "no"
 				// 		}
 				// 	}
@@ -269,7 +244,29 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				// }
 			}
 
+			if code == 200 {
+				w.WriteString(response)
+				w.Flush()
+				fi, err := os.Open(url)
+				defer fi.Close()
+				if err != nil {
+					code = 404
+					// hs.handleFileNotFoundRequest(conn)
+					fmt.Println(err)
+					break
+				}
+				io.Copy(w, fi)
+				w.Flush()
+				// fmt.Println(res.contentType)
+				// fmt.Println(size)
+			} else if code == 400 {
+				hs.handleBadRequest(conn)
+			} else if code == 404 {
+				hs.handleFileNotFoundRequest(conn)
+			} else {
+				fmt.Println("-=-=-=-=--=-=-==-=-=-=-==-error when handling requests-=-=-=-=--=-=-==-=-=-=-==-")
+			}
 		}
 	}
-	hs.handleBadRequest(conn)
+	// hs.handleBadRequest(conn)
 }
