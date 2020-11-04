@@ -4,7 +4,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"time"
 
 	// "fmt"
 	"log"
@@ -35,13 +34,13 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	delimiter := "\n"
 	remaining := ""
 	var res HttpResponseHeader
-	timeoutDuration := 5 * time.Second
+	// timeoutDuration := 5 * time.Second
 	// bufReader := bufio.NewReader(conn)
 	w := bufio.NewWriter(conn)
 	response := ""
 	for {
 
-		conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+		// conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 		// defer conn.Close()
 		buf := make([]byte, 10)
 		// size, err := bufReader.Read(buf)
@@ -53,11 +52,11 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 		data := buf[:size]
 		remaining = remaining + string(data)
 		// bufReader.Reset(bufReader)
-		log.Println("original msg: " + remaining)
+		// log.Println("original msg: " + remaining)
 		for strings.Contains(remaining, delimiter) {
 			// conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 			// log.Println("delimiter: " + delimiter)
-			// log.Println("original msg: " + remaining)
+			log.Println("original msg: " + remaining)
 			idx := strings.Index(remaining, delimiter)
 			msg := remaining[:idx]
 			// log.Println("request: " + msg)
@@ -73,7 +72,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 			// log.Println("prefix conn: ")
 			// log.Println(strings.HasPrefix(msg, "Connection:"))
 			if strings.HasPrefix(msg, "GET") {
-				log.Println(initialLine)
+				// log.Println(initialLine)
 				checkHTTP := strings.TrimSpace(initialLine[len(initialLine)-1]) == "HTTP/1.1"
 				checkLength := len(initialLine) == 3
 				checkGet := initialLine[0] == "GET"
@@ -134,12 +133,14 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					// res.contentType = initialLine[1][lastIdx:]
 					fi, err := os.Stat(url)
 					if err != nil {
+
+						hs.handleFileNotFoundRequest(conn)
 						log.Fatal(err)
 					}
 					// get the size
 					res.contentLength = fi.Size()
-					log.Println(res.contentType)
-					log.Println(size)
+					// log.Println(res.contentType)
+					// log.Println(size)
 
 					res.lastModified = fi.ModTime().String()
 					response += "Last-Modified: " + res.lastModified + "\r\n"
@@ -155,10 +156,11 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					// w.Flush()
 
 				}
-			} else if strings.HasPrefix(msg, "Host:") {
-				idxH := strings.Index(msg, ":")
-				msgH := msg[idxH+1:]
-				log.Println(msgH + " end of msgH")
+			} else if strings.HasPrefix(msg, "Host") {
+				// idxH := strings.Index(msg, ":")
+				// msgH := msg[idxH+1:]
+
+				// log.Println(msgH + " end of msgH")
 				w.WriteString(response)
 				w.Flush()
 				// hs.sendResponse()
@@ -170,14 +172,13 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					res.connection = "close"
 					w.WriteString("Connection: closed\r\n")
 					w.Flush()
-					conn.Close()
+					// conn.Close()
 					log.Println("Connection closed by request.")
 					return
 				} else {
 					res.connection = "no"
 				}
 			}
-			break
 		}
 	}
 }

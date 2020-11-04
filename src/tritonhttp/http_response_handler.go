@@ -15,15 +15,16 @@ func (hs *HttpServer) handleBadRequest(conn net.Conn) {
 	w.WriteString("HTTP/1.1 400 Bad Request\r\n")
 	w.WriteString("Connection: closed\r\n")
 	w.Flush()
-	conn.Close()
+	// conn.Close()
 
 }
 
-func (hs *HttpServer) handleFileNotFoundRequest(requestHeader *HttpRequestHeader, conn net.Conn) {
+func (hs *HttpServer) handleFileNotFoundRequest(conn net.Conn) {
 	// panic("todo - handleFileNotFoundRequest")
 	w := bufio.NewWriter(conn)
 	w.WriteString("HTTP/1.1 404 Not Found\r\n")
 	w.Flush()
+	// conn.Close()
 }
 
 // func (hs *HttpServer) handleResponse(requestHeader *HttpRequestHeader, conn net.Conn) (result string) {
