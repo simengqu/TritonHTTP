@@ -3,6 +3,7 @@ package tritonhttp
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strconv"
@@ -86,24 +87,24 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						fmt.Println(firstR)
 						fmt.Println(len(firstR))
 						code = 400
-						// hs.handleBadRequest(conn)
+						hs.handleBadRequest(conn)
 						break
 					} else if firstR[2] != "HTTP/1.1" {
 						fmt.Println("error2")
 						fmt.Println(firstR[2])
 						code = 400
-						// hs.handleBadRequest(conn)
+						hs.handleBadRequest(conn)
 						break
 					} else if firstR[0] != "GET" {
 						fmt.Println("error3")
 						fmt.Println(initialLine[0])
 						code = 400
-						// hs.handleBadRequest(conn)
+						hs.handleBadRequest(conn)
 						break
 					} else if !strings.HasPrefix(firstR[1], "/") {
 						fmt.Println("error4")
 						code = 400
-						// hs.handleBadRequest(conn)
+						hs.handleBadRequest(conn)
 						break
 					} else {
 						response += "HTTP/1.1 200 OK\r\n"
@@ -184,7 +185,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					code = 400
 					fmt.Println("error5")
 					fmt.Println(initialLine)
-					// hs.handleBadRequest(conn)
+					hs.handleBadRequest(conn)
 					break
 				}
 
@@ -214,6 +215,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					kv := strings.Split(reqSlice[i], ":")
 					if len(kv) != 2 {
 						code = 400
+						hs.handleBadRequest(conn)
 					} else {
 						if strings.HasPrefix(reqSlice[i], "Connection:") {
 							fmt.Println("handel connection2")
@@ -283,8 +285,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						fmt.Println(err)
 						break
 					}
-					// io.Copy(w, fi)
-					// w.Flush()
+					io.Copy(w, fi)
+					w.Flush()
 					// fmt.Println(res.contentType)
 					// fmt.Println(size)
 				} else if code == 400 {
