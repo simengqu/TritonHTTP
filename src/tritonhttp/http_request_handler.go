@@ -36,18 +36,17 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	remaining := ""
 	var res HttpResponseHeader
 	timeoutDuration := time.Now().Add(5 * time.Second)
-	// bufReader := bufio.NewReader(conn)
+	bufReader := bufio.NewReader(conn)
 	w := bufio.NewWriter(conn)
 	response := ""
 	log.Println("\n\nIn Go routine")
 	for time.Now().Before(timeoutDuration) {
-		defer conn.Close()
 		buf := make([]byte, 1024)
 		defer conn.Close()
 		conn.SetReadDeadline(timeoutDuration)
 
-		// size, err := bufReader.Read(buf)
-		size, err := conn.Read(buf)
+		size, err := bufReader.Read(buf)
+		// size, err := conn.Read(buf)
 		if err != nil {
 			// log.Println(err)
 		}
