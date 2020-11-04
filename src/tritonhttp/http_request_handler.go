@@ -125,11 +125,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						// w.WriteString("Server: Go-Triton-Server-1.0\r\n")
 						// w.Flush()
 
-						if strings.Index(firstR[1], hs.DocRoot) == -1 {
-							log.Println("no docroot " + firstR[1])
-							hs.handleFileNotFoundRequest(conn)
-							break
-						}
 						url := hs.DocRoot + firstR[1]
 						idxFirstR := strings.LastIndex(firstR[1], "/")
 						if firstR[1] == "/" {
