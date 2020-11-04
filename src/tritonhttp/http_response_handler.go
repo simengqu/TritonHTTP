@@ -18,7 +18,7 @@ func (hs *HttpServer) handleBadRequest(conn net.Conn) {
 	// panic("todo - handleBadRequest")
 	w := bufio.NewWriter(conn)
 	s := "HTTP/1.1 400 Bad Request\r\n"
-	s += "Server: Go-Triton-Server-1.0\r\n"
+	s += "Server: Go-Triton-Server-1.0\r\n\r\n"
 	w.WriteString(s)
 	w.Flush()
 	conn.Close()
