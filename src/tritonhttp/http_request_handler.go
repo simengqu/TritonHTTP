@@ -166,7 +166,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						res.lastModified = fi.ModTime().String()
 						response += "Last-Modified: " + res.lastModified + "\r\n"
 						response += "Content-Length: " + strconv.FormatInt(res.contentLength, 10) + "\r\n"
-						response += "Contene-Type: " + res.contentType + "\r\n\r\n"
+						response += "Content-Type: " + res.contentType + "\r\n\r\n"
 						// w.WriteString(response)
 						// w.Flush()
 						// w.WriteString("Last-Modified: " + rs.lastModified.String() + "\r\n")
