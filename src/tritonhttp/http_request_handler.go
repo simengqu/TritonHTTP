@@ -174,6 +174,19 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							// w.Flush()
 							// hs.sendResponse()
 							code = 200
+
+							fi, err := os.Open(url)
+							defer fi.Close()
+							if err != nil {
+								code = 404
+								hs.handleFileNotFoundRequest(conn)
+								fmt.Println(err)
+								break
+							}
+							w.WriteString(response)
+							w.Flush()
+							io.Copy(w, fi)
+							w.Flush()
 						} else {
 							fmt.Println("error6")
 							// hs.handleBadRequest(conn)
@@ -274,28 +287,28 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				// }
 				fmt.Println("-=-=-=-=-=-=-=WRITING RESPONSE -=-=-=-=-=-=-=")
 				fmt.Println(code)
-				if code == 200 {
-					w.WriteString(response)
-					w.Flush()
-					fi, err := os.Open(url)
-					defer fi.Close()
-					if err != nil {
-						code = 404
-						// hs.handleFileNotFoundRequest(conn)
-						fmt.Println(err)
-						break
-					}
-					io.Copy(w, fi)
-					w.Flush()
-					// fmt.Println(res.contentType)
-					// fmt.Println(size)
-				} else if code == 400 {
-					hs.handleBadRequest(conn)
-				} else if code == 404 {
-					hs.handleFileNotFoundRequest(conn)
-				} else {
-					fmt.Println("-=-=-=-=--=-=-==-=-=-=-==-error when handling requests-=-=-=-=--=-=-==-=-=-=-==-")
-				}
+				// if code == 200 {
+				// 	w.WriteString(response)
+				// 	w.Flush()
+				// 	fi, err := os.Open(url)
+				// 	defer fi.Close()
+				// 	if err != nil {
+				// 		code = 404
+				// 		hs.handleFileNotFoundRequest(conn)
+				// 		fmt.Println(err)
+				// 		break
+				// 	}
+				// 	io.Copy(w, fi)
+				// 	w.Flush()
+				// 	// fmt.Println(res.contentType)
+				// 	// fmt.Println(size)
+				// } else if code == 400 {
+				// 	hs.handleBadRequest(conn)
+				// } else if code == 404 {
+				// 	hs.handleFileNotFoundRequest(conn)
+				// } else {
+				// 	fmt.Println("-=-=-=-=--=-=-==-=-=-=-==-error when handling requests-=-=-=-=--=-=-==-=-=-=-==-")
+				// }
 			}
 
 		}
