@@ -41,6 +41,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	response := ""
 	log.Println("\n\nIn Go routine")
 	for time.Now().Before(timeoutDuration) {
+		defer conn.Close()
 		buf := make([]byte, 1024)
 		defer conn.Close()
 		conn.SetReadDeadline(timeoutDuration)
