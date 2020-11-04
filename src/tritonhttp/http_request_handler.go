@@ -46,8 +46,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 		// size, err := bufReader.Read(buf)
 		size, err := conn.Read(buf)
 		if err != nil {
-			log.Println(err)
-			break
+			// log.Println(err)
+			// break
 		}
 		data := buf[:size]
 		remaining = remaining + string(data)
@@ -56,7 +56,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 		for strings.Contains(remaining, delimiter) {
 			// conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 			// log.Println("delimiter: " + delimiter)
-			log.Println("original msg: " + remaining)
+			// log.Println("original msg: " + remaining)
 			idx := strings.Index(remaining, delimiter)
 			msg := remaining[:idx]
 			// log.Println("request: " + msg)
@@ -82,24 +82,30 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					// w.Flush()
 					log.Println("error1")
 					log.Println(len(initialLine))
-					hs.handleBadRequest(conn)
+					w.WriteString("400 Bad Request2")
+					w.Flush()
+					// hs.handleBadRequest(conn)
 					break
 				} else if !checkHTTP {
 					log.Println("error2")
 					log.Println(!checkHTTP)
 					log.Println(initialLine[len(initialLine)-1])
-					hs.handleBadRequest(conn)
+					w.WriteString("400 Bad Request2")
+					w.Flush()
+					// hs.handleBadRequest(conn)
 					break
 				} else if !checkGet {
 					log.Println("error3")
 					log.Println(initialLine[0])
-					hs.handleBadRequest(conn)
+					w.WriteString("400 Bad Request2")
+					w.Flush()
+					// hs.handleBadRequest(conn)
 					break
 				} else if !strings.HasPrefix(initialLine[1], "/") {
-					// w.WriteString("400 Bad Request2")
-					// w.Flush()
+					w.WriteString("400 Bad Request2")
+					w.Flush()
 					log.Println("error4")
-					hs.handleBadRequest(conn)
+					// hs.handleBadRequest(conn)
 					break
 				} else {
 					response += "HTTP/1.1 200 OK\r\n"
@@ -133,8 +139,9 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					// res.contentType = initialLine[1][lastIdx:]
 					fi, err := os.Stat(url)
 					if err != nil {
-
-						hs.handleFileNotFoundRequest(conn)
+						w.WriteString("HTTP/1.1 404 Not Found\r\n")
+						w.Flush()
+						// hs.handleFileNotFoundRequest(conn)
 						log.Fatal(err)
 					}
 					// get the size
