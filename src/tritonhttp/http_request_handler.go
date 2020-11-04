@@ -39,11 +39,11 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 	// bufReader := bufio.NewReader(conn)
 	w := bufio.NewWriter(conn)
 	response := ""
-	log.Println("\n\nIn Go routine\n")
-	for time.Now().Before(timeoutDuration){
+	log.Println("\n\nIn Go routine")
+	for time.Now().Before(timeoutDuration) {
 		buf := make([]byte, 1024)
 		defer conn.Close()
-		// conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+		conn.SetReadDeadline(timeoutDuration)
 
 		// size, err := bufReader.Read(buf)
 		size, err := conn.Read(buf)
@@ -71,22 +71,13 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				if len(reqSlice) < 2 {
 					w.WriteString("400 Bad Request")
 					w.Flush()
+					conn.Close()
 					break
 				}
 				log.Println("message:" + msg)
 				log.Println("left:" + remaining)
 				initialLine := reqSlice[0] // get
-				// log.Println("request: " + msg)
-				// initial := remaining[idx+1:]
 
-				// log.Println("left msg: " + remaining)
-				// log.Println(initialLine[0])
-				// w.WriteString(initialLine[0])
-				// w.Flush()
-				// log.Println("prefix host: ")
-				// log.Println(strings.HasPrefix(msg, "Host"))
-				// log.Println("prefix conn: ")
-				// log.Println(strings.HasPrefix(msg, "Connection:"))
 				// initialLine = GET /index.html HTTP/1.1
 				if strings.HasPrefix(initialLine, "GET") {
 					firstR := strings.Split(initialLine, " ")
@@ -95,21 +86,19 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					// checkLength := len(initialLine) == 3
 					// checkGet := firstR[0] == "GET"
 					if len(firstR) != 3 {
-						// req.validInitial = false
-						// w.WriteString("400 Bad Request1")
-						// w.Flush()
 						log.Println("error1")
 						log.Println(firstR)
 						log.Println(len(firstR))
 						w.WriteString("400 Bad Request")
 						w.Flush()
-						// hs.handleBadRequest(conn)
+						conn.Close()
 						break
 					} else if firstR[2] != "HTTP/1.1" {
 						log.Println("error2")
 						log.Println(firstR[2])
 						w.WriteString("400 Bad Request")
 						w.Flush()
+						conn.Close()
 						// hs.handleBadRequest(conn)
 						break
 					} else if firstR[0] != "GET" {
@@ -117,12 +106,14 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						log.Println(initialLine[0])
 						w.WriteString("400 Bad Request")
 						w.Flush()
+						conn.Close()
 						// hs.handleBadRequest(conn)
 						break
 					} else if !strings.HasPrefix(firstR[1], "/") {
 						w.WriteString("400 Bad Request")
 						w.Flush()
 						log.Println("error4")
+						conn.Close()
 						// hs.handleBadRequest(conn)
 						break
 					} else {
@@ -133,8 +124,13 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						// w.Flush()
 
 						url := hs.DocRoot + firstR[1]
+						idxFirstR := strings.LastIndex(firstR[1], "/")
 						if firstR[1] == "/" {
-							log.Println("url is 11/")
+							log.Println("url is 11/:")
+							url = hs.DocRoot + firstR[1] + "index.html"
+						} else if idxFirstR == len(firstR[1])-1 {
+							// if strings.HasPrefix(firstR[1], "/index")
+							log.Println("url is 22/:")
 							url = hs.DocRoot + firstR[1] + "index.html"
 						} else {
 							log.Println("url is " + url)
@@ -184,6 +180,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				} else {
 					w.WriteString("400 Bad Request")
 					w.Flush()
+					conn.Close()
 					log.Println("error5")
 					break
 				}
@@ -200,6 +197,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				} else {
 					w.WriteString("400 Bad Request")
 					w.Flush()
+					conn.Close()
 					log.Println("error6")
 					break
 				}
@@ -227,7 +225,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				}
 
 			}
-			
-		} 
+
+		}
 	}
 }
