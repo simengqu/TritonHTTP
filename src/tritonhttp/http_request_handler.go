@@ -156,7 +156,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							w.WriteString("HTTP/1.1 404 Not Found")
 							w.Flush()
 							// hs.handleFileNotFoundRequest(conn)
-							log.Fatal(err)
+							log.Println(err)
+							break
 						}
 						// get the size
 						res.contentLength = fi.Size()
