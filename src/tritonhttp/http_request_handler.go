@@ -69,9 +69,10 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				reqSlice := strings.Split(msg, delimiter) // request
 				log.Println(len(reqSlice))
 				if len(reqSlice) < 2 {
-					w.WriteString("400 Bad Request")
-					w.Flush()
-					conn.Close()
+					// w.WriteString("400 Bad Request")
+					// w.Flush()
+					// conn.Close()
+					hs.handleBadRequest(conn)
 					break
 				}
 				log.Println("message:" + msg)
@@ -89,32 +90,33 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						log.Println("error1")
 						log.Println(firstR)
 						log.Println(len(firstR))
-						w.WriteString("400 Bad Request")
-						w.Flush()
-						conn.Close()
+						// w.WriteString("400 Bad Request")
+						// w.Flush()
+						// conn.Close()
+						hs.handleBadRequest(conn)
 						break
 					} else if firstR[2] != "HTTP/1.1" {
 						log.Println("error2")
 						log.Println(firstR[2])
-						w.WriteString("400 Bad Request")
-						w.Flush()
-						conn.Close()
-						// hs.handleBadRequest(conn)
+						// w.WriteString("400 Bad Request")
+						// w.Flush()
+						// conn.Close()
+						hs.handleBadRequest(conn)
 						break
 					} else if firstR[0] != "GET" {
 						log.Println("error3")
 						log.Println(initialLine[0])
-						w.WriteString("400 Bad Request")
-						w.Flush()
-						conn.Close()
-						// hs.handleBadRequest(conn)
+						// w.WriteString("400 Bad Request")
+						// w.Flush()
+						// conn.Close()
+						hs.handleBadRequest(conn)
 						break
 					} else if !strings.HasPrefix(firstR[1], "/") {
-						w.WriteString("400 Bad Request")
-						w.Flush()
 						log.Println("error4")
-						conn.Close()
-						// hs.handleBadRequest(conn)
+						// w.WriteString("400 Bad Request")
+						// w.Flush()
+						// conn.Close()
+						hs.handleBadRequest(conn)
 						break
 					} else {
 						response += "HTTP/1.1 200 OK\r\n"
@@ -153,9 +155,9 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						// res.contentType = initialLine[1][lastIdx:]
 						fi, err := os.Stat(url)
 						if err != nil {
-							w.WriteString("HTTP/1.1 404 Not Found")
-							w.Flush()
-							// hs.handleFileNotFoundRequest(conn)
+							// w.WriteString("HTTP/1.1 404 Not Found")
+							// w.Flush()
+							hs.handleFileNotFoundRequest(conn)
 							log.Println(err)
 							break
 						}
@@ -179,10 +181,11 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 
 					}
 				} else {
-					w.WriteString("400 Bad Request")
-					w.Flush()
-					conn.Close()
+					// w.WriteString("400 Bad Request\r\nServer: Go-Triton-Server-1.0\r\n\r\n")
+					// w.Flush()
+					// conn.Close()
 					log.Println("error5")
+					hs.handleBadRequest(conn)
 					break
 				}
 				secondLine := reqSlice[1]
@@ -196,10 +199,11 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					w.Flush()
 					// hs.sendResponse()
 				} else {
-					w.WriteString("400 Bad Request")
-					w.Flush()
-					conn.Close()
+					// w.WriteString("400 Bad Request")
+					// w.Flush()
+					// conn.Close()
 					log.Println("error6")
+					hs.handleBadRequest(conn)
 					break
 				}
 

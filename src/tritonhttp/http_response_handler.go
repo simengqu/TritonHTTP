@@ -1,5 +1,10 @@
 package tritonhttp
 
+import (
+	"bufio"
+	"net"
+)
+
 // import (
 // 	"net"
 // 	// "strings"
@@ -9,23 +14,26 @@ package tritonhttp
 // 	"os"
 // )
 
-// func (hs *HttpServer) handleBadRequest(conn net.Conn) {
-// 	// panic("todo - handleBadRequest")
-// 	w := bufio.NewWriter(conn)
-// 	w.WriteString("HTTP/1.1 400 Bad Request\r\n")
-// 	w.WriteString("Connection: closed\r\n")
-// 	w.Flush()
-// 	// conn.Close()
+func (hs *HttpServer) handleBadRequest(conn net.Conn) {
+	// panic("todo - handleBadRequest")
+	w := bufio.NewWriter(conn)
+	s := "HTTP/1.1 400 Bad Request\r\n"
+	s += "Server: Go-Triton-Server-1.0\r\n"
+	w.WriteString(s)
+	w.Flush()
+	conn.Close()
 
-// }
+}
 
-// func (hs *HttpServer) handleFileNotFoundRequest(conn net.Conn) {
-// 	// panic("todo - handleFileNotFoundRequest")
-// 	w := bufio.NewWriter(conn)
-// 	w.WriteString("HTTP/1.1 404 Not Found\r\n")
-// 	w.Flush()
-// 	// conn.Close()
-// }
+func (hs *HttpServer) handleFileNotFoundRequest(conn net.Conn) {
+	// panic("todo - handleFileNotFoundRequest")
+	w := bufio.NewWriter(conn)
+	s := "HTTP/1.1 404 Not Found\r\n"
+	s += "Server: Go-Triton-Server-1.0\r\n\r\n"
+	w.WriteString(s)
+	w.Flush()
+	// conn.Close()
+}
 
 // func (hs *HttpServer) handleResponse(requestHeader *HttpRequestHeader, conn net.Conn) (result string) {
 // 	// panic("todo - handleResponse")
