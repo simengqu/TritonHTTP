@@ -271,4 +271,5 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 
 		}
 	}
+	hs.handleBadRequest(conn)
 }
