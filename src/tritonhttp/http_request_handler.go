@@ -199,8 +199,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					// msgH := msg[idxH+1:]
 
 					// log.Println(msgH + " end of msgH")
-					// w.WriteString(response)
-					// w.Flush()
+					w.WriteString(response)
+					w.Flush()
 					// hs.sendResponse()
 				} else {
 					// w.WriteString("400 Bad Request")
@@ -221,8 +221,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						log.Println("conn msg:" + connection)
 						if connection == "close" {
 							res.connection = "close"
-							w.WriteString("Connection: closed\r\n")
-							w.Flush()
+							// w.WriteString("Connection: closed\r\n")
+							// w.Flush()
 							conn.Close()
 							log.Println("Connection closed by request.")
 							return
