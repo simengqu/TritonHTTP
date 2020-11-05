@@ -106,6 +106,10 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					} else {
 						// check if file is valid
 						if !strings.HasPrefix(firstR[1], hs.DocRoot) {
+							if strings.Contains(firstR[1], "..") {
+								hs.handleBadRequest(conn)
+								break
+							}
 							url = hs.DocRoot + firstR[1]
 						}
 
