@@ -103,21 +103,38 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					hs.handleBadRequest(conn)
 					break
 				} else {
-					// check if file is valid
-					if !strings.HasPrefix(firstR[1], hs.DocRoot) {
-						url = hs.DocRoot + firstR[1]
-					}
 
-					idxFirstR := strings.LastIndex(firstR[1], "/")
-					if firstR[1] == "/" {
-						fmt.Println("url is 11/:")
-						url = hs.DocRoot + firstR[1] + "index.html"
-					} else if idxFirstR == len(firstR[1])-1 {
-						fmt.Println("url is 22/:")
-						url = hs.DocRoot + firstR[1] + "index.html"
-					} else {
-						url = hs.DocRoot + firstR[1]
+					// if !strings.HasPrefix(firstR[1], hs.DocRoot) {
+					// 	url = hs.DocRoot + firstR[1]
+					// }
+
+					// idxFirstR := strings.LastIndex(firstR[1], "/")
+					// if firstR[1] == "/" {
+					// 	fmt.Println("url is 11/:")
+					// 	url = hs.DocRoot + firstR[1] + "index.html"
+					// } else if idxFirstR == len(firstR[1])-1 {
+					// 	fmt.Println("url is 22/:")
+					// 	url = hs.DocRoot + firstR[1] + "index.html"
+					// } else {
+					// 	url = hs.DocRoot + firstR[1]
+					// }
+
+					// check if file path is valid
+					url = firstR[1]
+					if !strings.HasPrefix(firstR[1], hs.DocRoot) { // no doc root
+						if strings.Contains(firstR[1], "..") {
+							hs.handleFileNotFoundRequest(conn)
+							fmt.Println("error no doc root, has ..")
+							fmt.Println(firstR[1])
+							break
+						}
+						url = hs.DocRoot + url
 					}
+					// url contains doc root
+					idxUrl := strings.LastIndex(url, hs.DocRoot)
+					url = hs.DocRoot + url[idxUrl+len(hs.DocRoot):]
+
+					// check if file is valid
 					fi, err := os.Open(url)
 					defer fi.Close()
 					if err != nil {
