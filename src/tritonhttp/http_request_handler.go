@@ -220,7 +220,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 			fmt.Println("-=-=-=-=-=-=-=WRITING RESPONSE -=-=-=-=-=-=-=")
 			fmt.Println(code)
 		}
-
 	}
 	if remaining != "" {
 		fmt.Println("partial request: " + remaining)
