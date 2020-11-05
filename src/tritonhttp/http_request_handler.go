@@ -133,6 +133,9 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					// url contains doc root
 					idxUrl := strings.LastIndex(url, hs.DocRoot)
 					url = hs.DocRoot + url[idxUrl+len(hs.DocRoot):]
+					if strings.LastIndex(url, "/") == len(url)-1 {
+						url += "index.html"
+					}
 
 					// check if file is valid
 					fi, err := os.Open(url)
