@@ -48,7 +48,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 		if err != nil {
 			// fmt.Println(err)
 		}
-
+		timeoutDuration := 5 * time.Second
+		conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 		data := buf[:size]
 		remaining = remaining + string(data)
 		url := ""
@@ -105,8 +106,30 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						break
 					} else {
 						// check if file is valid
+						// if strings.Contains(firstR[1], "..") {
+						// 	hs.handleFileNotFoundRequest(conn)
+						// 	fmt.Println(err)
+						// 	break
+						// }
+						// strings.ReplaceAll(firstR[1], "/..", "")
+						if strings.Contains(firstR[1], "..") {
+							if strings.Contains(firstR[1], hs.DocRoot) {
+								docIdx := strings.LastIndex(firstR[1], "..")
+								firstR[1] = firstR[1][docIdx+2:]
+								// url = hs.DocRoot + validP
+								fmt.Println("\n\n-=-=s--=-=\n" + firstR[1] + "\n0-0-0-0-0-")
+							} else {
+								hs.handleFileNotFoundRequest(conn)
+								fmt.Println(err)
+								break
+							}
+
+						}
 						if !strings.HasPrefix(firstR[1], hs.DocRoot) {
 							url = hs.DocRoot + firstR[1]
+						} else {
+							docIdx := strings.LastIndex(firstR[1], hs.DocRoot)
+							url = url[docIdx:]
 						}
 
 						idxFirstR := strings.LastIndex(firstR[1], "/")
@@ -125,6 +148,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							code = 404
 							hs.handleFileNotFoundRequest(conn)
 							fmt.Println(err)
+							fmt.Println(url)
 							break
 						}
 
