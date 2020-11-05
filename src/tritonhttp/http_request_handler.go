@@ -112,35 +112,43 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						// 	break
 						// }
 						// strings.ReplaceAll(firstR[1], "/..", "")
-						if strings.Contains(firstR[1], "..") {
-							if strings.Contains(firstR[1], hs.DocRoot) {
-								docIdx := strings.LastIndex(firstR[1], "..")
-								firstR[1] = firstR[1][docIdx+2:]
-								// url = hs.DocRoot + validP
-								fmt.Println("\n\n-=-=s--=-=\n" + firstR[1] + "\n0-0-0-0-0-")
-							} else {
+						// if strings.Contains(firstR[1], "..") {
+						// 	if strings.Contains(firstR[1], hs.DocRoot) {
+						// 		docIdx := strings.LastIndex(firstR[1], "..")
+						// 		firstR[1] = firstR[1][docIdx+2:]
+						// 		// url = hs.DocRoot + validP
+						// 		fmt.Println("\n\n-=-=s--=-=\n" + firstR[1] + "\n0-0-0-0-0-")
+						// 	} else {
+						// 		hs.handleFileNotFoundRequest(conn)
+						// 		fmt.Println(err)
+						// 		break
+						// 	}
+						// }
+						if !strings.HasPrefix(firstR[1], hs.DocRoot) { // no doc root
+							if strings.Contains(firstR[1], "..") { // contains ..
 								hs.handleFileNotFoundRequest(conn)
 								fmt.Println(err)
+								fmt.Println("error8")
 								break
+							} else { // preappend doc root
+								url = hs.DocRoot + firstR[1]
 							}
-
+						} else { // has doc root
+							if strings.Contains(firstR[1], "..") {
+								docIdx := strings.LastIndex(firstR[1], "..")
+								url = hs.DocRoot + firstR[1][docIdx+2:]
+								// url = hs.DocRoot + validP
+								fmt.Println("\n\n-=-=s--=-=\n" + url + "\n0-0-0-0-0-")
+							}
 						}
-						if !strings.HasPrefix(firstR[1], hs.DocRoot) {
-							url = hs.DocRoot + firstR[1]
-						} else {
-							docIdx := strings.LastIndex(firstR[1], hs.DocRoot)
-							url = url[docIdx:]
-						}
 
-						idxFirstR := strings.LastIndex(firstR[1], "/")
-						if firstR[1] == "/" {
+						idxFirstR := strings.LastIndex(url, "/")
+						if url == "/" {
 							fmt.Println("url is 11/:")
-							url = hs.DocRoot + firstR[1] + "index.html"
+							url = url + "index.html"
 						} else if idxFirstR == len(firstR[1])-1 {
 							fmt.Println("url is 22/:")
-							url = hs.DocRoot + firstR[1] + "index.html"
-						} else {
-							url = hs.DocRoot + firstR[1]
+							url = url + "index.html"
 						}
 						fi, err := os.Open(url)
 						defer fi.Close()
@@ -149,6 +157,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							hs.handleFileNotFoundRequest(conn)
 							fmt.Println(err)
 							fmt.Println(url)
+							fmt.Println("error9")
 							break
 						}
 
@@ -186,7 +195,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					if err != nil {
 						code = 404
 						hs.handleFileNotFoundRequest(conn)
-						fmt.Println(err)
+						fmt.Println("error7")
 						break
 					}
 					fiStat, _ := fi.Stat()
