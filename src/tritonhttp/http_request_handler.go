@@ -73,8 +73,10 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 				}
 				fmt.Println("message:" + msg)
 				fmt.Println("left:" + remaining)
-				initialLine := reqSlice[0] // get
+				fmt.Println(reqSlice)
 
+				initialLine := reqSlice[0] // get
+				fmt.Println(initialLine)
 				// initialLine = GET /index.html HTTP/1.1
 				if strings.HasPrefix(initialLine, "GET") {
 					firstR := strings.Split(initialLine, " ")
@@ -138,10 +140,13 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						} else {
 							res.contentType = "application/octet-stream"
 							fmt.Println("extension not found: " + extension)
-							hs.handleBadRequest(conn)
-							break
+							// hs.handleBadRequest(conn)
+							// break
 						}
 					}
+				} else {
+					hs.handleBadRequest(conn)
+					break
 				}
 
 				// check if headers valid
