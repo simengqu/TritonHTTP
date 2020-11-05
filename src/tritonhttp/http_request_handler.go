@@ -3,7 +3,6 @@ package tritonhttp
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"strconv"
@@ -173,10 +172,11 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					response += "Last-Modified: " + res.lastModified + "\r\n"
 					response += "Content-Length: " + strconv.FormatInt(res.contentLength, 10) + "\r\n"
 					response += "Content-Type: " + res.contentType + "\r\n\r\n"
+					fmt.Println("\n-=-=-=-=-=-==-=-=-=-=-=-=-=-=-=-=-=--=-\nWriting 200 OK response\n0-0-==0-=0-=0-=0-=0=0-=0-=0=")
 					w.WriteString(response)
 					w.Flush()
-					io.Copy(w, fi)
-					w.Flush()
+					// io.Copy(w, fi)
+					// w.Flush()
 				} else {
 					fmt.Println("error6")
 					hs.handleBadRequest(conn)
@@ -215,4 +215,10 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 
 		}
 	}
+	// has data left in buffer, partial request
+	if remaining != "" {
+		hs.handleBadRequest(conn)
+		fmt.Println("Partial request: " + remaining)
+	}
+
 }
