@@ -16,5 +16,9 @@
 pkg/
 src/github.com/
 *.input
+*.output
 git
 .vscode/
+.DS_Store
+.pdf
+.ipynb
