@@ -3,6 +3,7 @@ package tritonhttp
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strconv"
@@ -175,8 +176,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					fmt.Println("\n-=-=-=-=-=-==-=-=-=-=-=-=-=-=-=-=-=--=-\nWriting 200 OK response\n0-0-==0-=0-=0-=0-=0=0-=0-=0=")
 					w.WriteString(response)
 					w.Flush()
-					// io.Copy(w, fi)
-					// w.Flush()
+					io.Copy(w, fi)
+					w.Flush()
 				} else {
 					fmt.Println("error6")
 					hs.handleBadRequest(conn)
