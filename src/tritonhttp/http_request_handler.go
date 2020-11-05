@@ -106,10 +106,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					} else {
 						// check if file is valid
 						if !strings.HasPrefix(firstR[1], hs.DocRoot) {
-							if strings.Contains(firstR[1], "..") {
-								hs.handleBadRequest(conn)
-								break
-							}
 							url = hs.DocRoot + firstR[1]
 						}
 
@@ -122,6 +118,12 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							url = hs.DocRoot + firstR[1] + "index.html"
 						} else {
 							url = hs.DocRoot + firstR[1]
+						}
+
+						extcheck := firstR[1][idxFirstR+1:]
+						if strings.Contains(extcheck, ".") {
+							hs.handleBadRequest(conn)
+							break
 						}
 						fi, err := os.Open(url)
 						defer fi.Close()
