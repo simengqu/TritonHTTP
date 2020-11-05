@@ -175,6 +175,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					response += "Content-Type: " + res.contentType + "\r\n\r\n"
 					w.WriteString(response)
 					w.Flush()
+					response = ""
 					io.Copy(w, fi)
 					w.Flush()
 				} else {
