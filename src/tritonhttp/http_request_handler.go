@@ -120,11 +120,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							url = hs.DocRoot + firstR[1]
 						}
 
-						extcheck := firstR[1][idxFirstR+1:]
-						if strings.Contains(extcheck, ".") {
-							hs.handleBadRequest(conn)
-							break
-						}
 						fi, err := os.Open(url)
 						defer fi.Close()
 						if err != nil {
@@ -143,6 +138,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						} else {
 							res.contentType = "application/octet-stream"
 							fmt.Println("extension not found: " + extension)
+							hs.handleBadRequest(conn)
+							break
 						}
 					}
 				}
