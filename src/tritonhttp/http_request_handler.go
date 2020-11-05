@@ -48,8 +48,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 		if err != nil {
 			// fmt.Println(err)
 		}
-		timeoutDuration := 5 * time.Second
-		conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+
 		data := buf[:size]
 		remaining = remaining + string(data)
 		url := ""
@@ -106,31 +105,19 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 						break
 					} else {
 						// check if file is valid
-						// if not relative path
-						url = firstR[1]
-						if strings.HasPrefix(firstR[1], hs.DocRoot) { // absolute path
-							idxP := strings.LastIndex(firstR[1], "..")
-							url = hs.DocRoot + firstR[1][idxP+2:]
-							if strings.LastIndex(url, "/") == len(url)-1 {
-								url = url + "index.html"
-							}
-						} else { // relative path
-							if strings.Contains(firstR[1], "..") {
-								hs.handleFileNotFoundRequest(conn)
-								fmt.Println(err)
-								fmt.Println(url)
-								fmt.Println("error10")
-								break
-							} else {
-								idxP := strings.LastIndex(firstR[1], "/")
-								if idxP == len(firstR)-1 {
-									url = hs.DocRoot + firstR[1] + "index.html"
-								} else {
-									url = hs.DocRoot + url
-								}
+						if !strings.HasPrefix(firstR[1], hs.DocRoot) {
+							url = hs.DocRoot + firstR[1]
+						}
 
-							}
-
+						idxFirstR := strings.LastIndex(firstR[1], "/")
+						if firstR[1] == "/" {
+							fmt.Println("url is 11/:")
+							url = hs.DocRoot + firstR[1] + "index.html"
+						} else if idxFirstR == len(firstR[1])-1 {
+							fmt.Println("url is 22/:")
+							url = hs.DocRoot + firstR[1] + "index.html"
+						} else {
+							url = hs.DocRoot + firstR[1]
 						}
 						fi, err := os.Open(url)
 						defer fi.Close()
@@ -138,8 +125,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 							code = 404
 							hs.handleFileNotFoundRequest(conn)
 							fmt.Println(err)
-							fmt.Println(url)
-							fmt.Println("error9")
 							break
 						}
 
@@ -177,7 +162,7 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					if err != nil {
 						code = 404
 						hs.handleFileNotFoundRequest(conn)
-						fmt.Println("error7")
+						fmt.Println(err)
 						break
 					}
 					fiStat, _ := fi.Stat()
@@ -188,7 +173,6 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 					response += "Last-Modified: " + res.lastModified + "\r\n"
 					response += "Content-Length: " + strconv.FormatInt(res.contentLength, 10) + "\r\n"
 					response += "Content-Type: " + res.contentType + "\r\n\r\n"
-					fmt.Println("\n-=-=-=-=-=-==-=-=-=-=-=-=-=-=-=-=-=--=-\nWriting 200 OK response\n0-0-==0-=0-=0-=0-=0=0-=0-=0=")
 					w.WriteString(response)
 					w.Flush()
 					io.Copy(w, fi)
@@ -231,10 +215,4 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 
 		}
 	}
-	// has data left in buffer, partial request
-	if remaining != "" {
-		hs.handleBadRequest(conn)
-		fmt.Println("Partial request: " + remaining)
-	}
-
 }
