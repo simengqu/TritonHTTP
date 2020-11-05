@@ -17,3 +17,4 @@ pkg/
 src/github.com/
 *.input
 git
+.vscode/
