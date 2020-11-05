@@ -215,4 +215,8 @@ func (hs *HttpServer) handleConnection(conn net.Conn) {
 
 		}
 	}
+	if remaining != "" {
+		fmt.Println("partial request: " + remaining)
+		hs.handleBadRequest(conn)
+	}
 }
